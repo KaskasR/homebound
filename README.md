@@ -1,5 +1,7 @@
 # Homebound
 
+<img src="assets/icon.png" width="96" align="right" alt="Homebound icon">
+
 A small macOS tool that sets **your own iPhone's** simulated GPS location from your Mac, using Apple's developer location-simulation service. No jailbreak, nothing installed on the phone.
 
 Mode: **set-and-unplug**. With the default `devicectl` driver, a location set while plugged in stays after you unplug. It was tested on iOS 26.6.1; see [TEST_RESULTS.md](TEST_RESULTS.md).
@@ -86,3 +88,12 @@ Code layout:
 - `data/`: presets, last-applied state, and the activity log (git-ignored)
 
 Address search uses OpenStreetMap Nominatim, with at most 1 request per second and cached results.
+
+## Notes
+
+- A personal project, built for my own iPhone and tested on iOS 26.6.1 with Xcode 27.2 (macOS 27). Apple doesn't document how long location simulation persists, so other iOS versions may behave differently. [TEST_RESULTS.md](TEST_RESULTS.md) records how the behavior was measured.
+- Use it only on devices you own. Faking your location breaks the terms of many apps, such as games, delivery apps, and check-in systems.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
