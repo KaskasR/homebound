@@ -24,12 +24,18 @@
 | Check | Time | Result |
 |---|---|---|
 | Set, blue dot moved in Maps | 04:17:51 set; ~04:18 checked | ✅ Dot at Pauley Pavilion. Via `sudo pymobiledevice3 remote tunneld` + `developer dvt simulate-location set --tunnel <UDID>`; process stays open, prints nothing while active |
-| Ctrl+C (session ended), still plugged in | SIGINT 04:18:32 | Pending user check |
-| Unplugged +1 min | | |
-| Unplugged +5 min | | |
-| Unplugged +30 min | | |
-| Clear restores real location | | |
+| Ctrl+C (session ended), still plugged in | SIGINT 04:18:32 | ❌ Dot returned to real location as soon as the session ended |
+| Unplugged +1 min | | N/A: unplugging ends the session, which already reverts the location |
+| Unplugged +5 min | | N/A: unplugging ends the session, which already reverts the location |
+| Unplugged +30 min | | N/A: unplugging ends the session, which already reverts the location |
+| Clear restores real location | | N/A: ending the session restored it automatically |
 
 ## Notes
+- pymobiledevice3: simulation is tied to the open `set` session. Location reverts when the process exits.
 - devicectl: negative longitude must use `--longitude=-118.44219` (the `=` form); otherwise it is parsed as a flag.
 - devicectl `coordinate` returns and exits; it does not hold a session open. Simulation persisted after the process ended (phone still plugged in).
+
+## Conclusion (2026-11-19)
+- **devicectl**: location persists after the command exits AND after unplugging (verified to +5 min), and it shows in Find My (iCloud). Set-and-unplug mode is viable.
+- **pymobiledevice3**: tethered only. Needs sudo tunneld plus a live session; reverts when the session ends.
+- **Still to verify before the trip**: a multi-hour unplugged hold, a friend's Find My check from a separate account, and that a phone restart clears simulation.
