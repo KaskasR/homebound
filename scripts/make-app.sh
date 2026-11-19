@@ -23,8 +23,14 @@ for s in 16 32 128 256 512; do
   d=$((s * 2)); sips -z $d $d "$REPO/assets/icon.png" --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
 done
 iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/applet.icns"
+# macOS prefers the asset-catalog icon (Assets.car via CFBundleIconName) over applet.icns,
+# so remove it, or the Dock shows the generic script icon.
+rm -f "$APP/Contents/Resources/Assets.car"
+/usr/libexec/PlistBuddy -c "Delete :CFBundleIconName" "$APP/Contents/Info.plist" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier local.homebound.app" "$APP/Contents/Info.plist" 2>/dev/null \
   || /usr/libexec/PlistBuddy -c "Add :CFBundleIdentifier string local.homebound.app" "$APP/Contents/Info.plist"
 codesign --force --deep -s - "$APP" 2>/dev/null  # re-sign ad hoc after editing Info.plist
 touch "$APP"
+# Tell Launch Services about the new icon.
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$APP" >/dev/null 2>&1 || true
 echo "Built $APP"
