@@ -7,7 +7,8 @@
 - Developer Mode: on. Personalized DDI: mounted (version 651.32)
 
 ## Test coordinate
-Powell Library, UCLA: 34.07161, -118.44219 (on campus, not far away)
+- devicectl: Powell Library, UCLA: 34.07161, -118.44219
+- pymobiledevice3: Pauley Pavilion, UCLA: 34.07043, -118.44686 (different spot so a stale dot can't fool us)
 
 ## Driver 1: devicectl
 | Check | Time | Result |
@@ -17,7 +18,7 @@ Powell Library, UCLA: 34.07161, -118.44219 (on campus, not far away)
 | Unplugged +5 min | 04:12 | ✅ Still at Powell |
 | Unplugged +30 min | | ⏭️ Skipped for now (user chose to move on) |
 | Friend confirms in Find My | ~04:13 | ✅ (partial) Find My on user's own Mac (iCloud server-side location) shows phone at Powell. Friend check from separate account still pending |
-| Clear restores real location | | |
+| Clear restores real location | 04:15:37 | ✅ Maps and Find My (Mac) both back to real location. Clear took ~1 s |
 
 ## Driver 2: pymobiledevice3
 | Check | Time | Result |
