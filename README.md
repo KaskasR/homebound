@@ -1,5 +1,7 @@
 # Homebound
 
+<img src="assets/icon.png" width="96" align="right" alt="Homebound icon">
+
 A small macOS tool that sets **your own iPhone's** simulated GPS location from your Mac, using Apple's developer location-simulation service. No jailbreak, nothing installed on the phone.
 
 Mode: **set-and-unplug**. With the default `devicectl` driver, a location set while plugged in stays after you unplug. It was tested on iOS 26.6.1; see [TEST_RESULTS.md](TEST_RESULTS.md).
@@ -17,11 +19,17 @@ Mode: **set-and-unplug**. With the default `devicectl` driver, a location set wh
 
 1. **Xcode** installed and opened once. Check with `xcrun devicectl --version`.
 2. **iPhone:** plug it in, unlock it, and tap **Trust**. Then turn on **Settings → Privacy & Security → Developer Mode** (the phone restarts; tap *Turn On*). If the toggle is missing, open Xcode → Window → Devices and Simulators with the phone plugged in.
-3. **Start Homebound:**
+3. **Build the Mac app** (one time):
    ```
-   ./homebound.sh
+   ./scripts/make-app.sh
    ```
-   The first run creates `.venv` and installs the pinned `requirements.txt`. The app opens at <http://127.0.0.1:8765>.
+   This installs **Homebound.app** into `~/Applications`, so you can launch it from Spotlight or Launchpad, or drag it to the Dock. Run the script again if you move this folder.
+
+   - **Click Homebound** to start the local server in the background and open the page in your browser. The first launch creates `.venv` and installs the pinned `requirements.txt`, so it takes a minute.
+   - **Click the Dock icon** while it's running to reopen the page if you closed the tab.
+   - **Press ⌘Q** (or right-click the Dock icon → Quit) to stop the server. With the default devicectl driver, a location you've set **stays set** after you quit.
+
+   To run it from Terminal instead: `./homebound.sh`. Server logs are in `data/server.log`.
 4. Search for or click your dorm, type **Dorm** in the preset box, and click **Save**.
 
 Optional fallback driver (pymobiledevice3, **tethered only**): in a separate Terminal window run
@@ -38,7 +46,7 @@ Optional fallback driver (pymobiledevice3, **tethered only**): in a separate Ter
 
 At the dorm, before leaving:
 1. Charge the phone. Pack the **Mac, its charger, and a phone cable**.
-2. Plug in the iPhone, unlock it, and run `./homebound.sh`. The device panel should show every check green and **Ready**.
+2. Plug in the iPhone, unlock it, and open **Homebound** (Spotlight: ⌘Space → Homebound). The device panel should show every check green and **Ready**.
 3. Click the **Dorm** preset, then **Set location**.
 4. Open **Apple Maps** on the phone and tap the location arrow. When the blue dot is at the dorm, click **Yes, it's there**.
 5. When the panel says **Safe to unplug**, unplug the phone. Check Maps once more after a minute.
@@ -80,3 +88,12 @@ Code layout:
 - `data/`: presets, last-applied state, and the activity log (git-ignored)
 
 Address search uses OpenStreetMap Nominatim, with at most 1 request per second and cached results.
+
+## Notes
+
+- A personal project, built for my own iPhone and tested on iOS 26.6.1 with Xcode 27.2 (macOS 27). Apple doesn't document how long location simulation persists, so other iOS versions may behave differently. [TEST_RESULTS.md](TEST_RESULTS.md) records how the behavior was measured.
+- Use it only on devices you own. Faking your location breaks the terms of many apps, such as games, delivery apps, and check-in systems.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
