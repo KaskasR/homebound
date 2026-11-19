@@ -16,7 +16,7 @@ Powell Library, UCLA: 34.07161, -118.44219 (on campus, not far away)
 | Unplugged +1 min | unplugged 04:06:59 | Not reported separately (held at +5) |
 | Unplugged +5 min | 04:12 | ✅ Still at Powell |
 | Unplugged +30 min | | ⏭️ Skipped for now (user chose to move on) |
-| Friend confirms in Find My | | Pending |
+| Friend confirms in Find My | ~04:13 | ✅ (partial) Find My on user's own Mac (iCloud server-side location) shows phone at Powell. Friend check from separate account still pending |
 | Clear restores real location | | |
 
 ## Driver 2: pymobiledevice3
