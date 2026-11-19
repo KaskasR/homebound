@@ -13,10 +13,10 @@ Powell Library, UCLA: 34.07161, -118.44219 (on campus, not far away)
 | Check | Time | Result |
 |---|---|---|
 | Set, blue dot moved in Maps | 04:03:47 set; 04:05 checked | ✅ Dot at Powell Library. Command exits after ~26 s; location held after exit while plugged in |
-| Unplugged +1 min | | |
-| Unplugged +5 min | | |
-| Unplugged +30 min | | |
-| Friend confirms in Find My | | |
+| Unplugged +1 min | unplugged 04:06:59 | Not reported separately (held at +5) |
+| Unplugged +5 min | 04:12 | ✅ Still at Powell |
+| Unplugged +30 min | | ⏭️ Skipped for now (user chose to move on) |
+| Friend confirms in Find My | | Pending |
 | Clear restores real location | | |
 
 ## Driver 2: pymobiledevice3
