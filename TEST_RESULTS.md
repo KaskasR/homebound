@@ -23,8 +23,8 @@
 ## Driver 2: pymobiledevice3
 | Check | Time | Result |
 |---|---|---|
-| Set, blue dot moved in Maps | | |
-| Ctrl+C (session ended), still plugged in | | |
+| Set, blue dot moved in Maps | 04:17:51 set; ~04:18 checked | ✅ Dot at Pauley Pavilion. Via `sudo pymobiledevice3 remote tunneld` + `developer dvt simulate-location set --tunnel <UDID>`; process stays open, prints nothing while active |
+| Ctrl+C (session ended), still plugged in | SIGINT 04:18:32 | Pending user check |
 | Unplugged +1 min | | |
 | Unplugged +5 min | | |
 | Unplugged +30 min | | |
