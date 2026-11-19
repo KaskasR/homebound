@@ -84,3 +84,12 @@ def test_search_accepts_pasted_coordinates(client):
 ])
 def test_parse_latlon(text, expected):
     assert parse_latlon(text) == expected
+
+
+def test_blocks_cross_site_post(client):
+    r = client.post("/api/clear", headers={"Origin": "https://evil.example"})
+    assert r.status_code == 403 and client.fake.calls == []
+
+
+def test_blocks_foreign_host(client):
+    assert client.get("/api/status", headers={"Host": "evil.example:8765"}).status_code == 403

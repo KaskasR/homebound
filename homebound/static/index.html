@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Homebound</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1b1f24; --muted: #5b6573; --border: #dde1e6;
+    --ok: #1a7f37; --bad: #c62828; --warn: #9a6700; --accent: #2457d6; --accent-text: #fff;
+    --danger: #c62828; --danger-text: #fff; --warn-bg: #fff8e1; --ok-bg: #e8f5e9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111418; --panel: #1a1e24; --text: #e6e9ee; --muted: #9aa4b2; --border: #2c323b;
+      --ok: #4cc26a; --bad: #ff6b6b; --warn: #e3b341; --accent: #5b8cff; --accent-text: #0b0f17;
+      --danger: #e5484d; --danger-text: #fff; --warn-bg: #2b2410; --ok-bg: #12291a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         background: var(--bg); color: var(--text); }
+  header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--panel); }
+  header h1 { font-size: 18px; margin: 0; }
+  header .spacer { flex: 1; }
+  .banner { background: var(--warn-bg); color: var(--text); border-bottom: 1px solid var(--border); padding: 8px 16px; font-size: 13px; }
+  main { display: grid; grid-template-columns: 320px 1fr 340px; gap: 12px; padding: 12px 16px; height: calc(100vh - 92px); }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; overflow: auto; }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 8px; }
+  .panel + .panel { margin-top: 12px; }
+  .col { display: flex; flex-direction: column; min-height: 0; }
+  .col > .panel:last-child { flex: 1; }
+  #map { height: 100%; border-radius: 10px; border: 1px solid var(--border); min-height: 300px; }
+  .check { display: grid; grid-template-columns: 18px 1fr; gap: 6px; padding: 4px 0; }
+  .check .fix { grid-column: 2; color: var(--warn); font-size: 12.5px; white-space: pre-wrap; }
+  .dot-ok { color: var(--ok); } .dot-bad { color: var(--bad); }
+  .kv { color: var(--muted); }
+  input, select { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg); color: var(--text); font: inherit; }
+  button { font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; }
+  button:hover { filter: brightness(1.05); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button.restore { width: 100%; padding: 14px; font-size: 16px; font-weight: 700; background: var(--danger); color: var(--danger-text); border-color: var(--danger); }
+  .row { display: flex; gap: 8px; margin-top: 8px; }
+  .row > * { flex: 1; }
+  .results div, .preset { padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+  .results div:hover, .preset:hover { background: var(--bg); }
+  .preset { display: flex; justify-content: space-between; align-items: center; }
+  .preset button { padding: 2px 8px; font-size: 12px; }
+  #picked { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+  .flow { border-radius: 8px; padding: 10px; margin-top: 10px; font-size: 13.5px; }
+  .flow.ok { background: var(--ok-bg); } .flow.warn { background: var(--warn-bg); }
+  .log { font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+  .log div { padding: 3px 0; border-bottom: 1px dashed var(--border); }
+  .log .error { color: var(--bad); } .log .ok { color: var(--ok); }
+  .log .fix { color: var(--warn); display: block; padding-left: 12px; }
+  @media (max-width: 1000px) {
+    main { grid-template-columns: 1fr; height: auto; }
+    #map { height: 55vh; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🏠 Homebound</h1>
+  <span class="spacer"></span>
+  <label class="kv">Driver
+    <select id="driver" style="width:auto;margin-left:6px"></select>
+  </label>
+  <button id="refresh">Refresh</button>
+</header>
+<div class="banner" id="banner">
+  ⚠️ A phone <b>restart</b> or <b>dead battery</b> clears the simulated location and the phone goes back to real GPS. Keep this Mac and a charger with you so you can Re-apply.
+</div>
+<main>
+  <div class="col">
+    <section class="panel" id="device-panel">
+      <h2>iPhone</h2>
+      <div id="device">Checking…</div>
+    </section>
+    <section class="panel">
+      <h2>Current simulation</h2>
+      <div id="current">—</div>
+      <div id="flow"></div>
+      <div class="row"><button id="reapply">Re-apply last location</button></div>
+      <div class="row"><button class="restore" id="restore">Restore real location</button></div>
+    </section>
+  </div>
+
+  <div id="map"></div>
+
+  <div class="col">
+    <section class="panel">
+      <h2>Pick a location</h2>
+      <form id="search-form"><input id="search" placeholder="Search an address, or paste “lat, lon”" autocomplete="off"></form>
+      <div class="results" id="results"></div>
+      <p>Pin: <span id="picked">click the map</span></p>
+      <div class="row"><button class="primary" id="set" disabled>Set location</button></div>
+      <div class="row"><input id="preset-name" placeholder="Preset name (e.g. Dorm)"><button id="save-preset" disabled style="flex:0 0 auto">Save</button></div>
+      <h2 style="margin-top:14px">Presets</h2>
+      <div id="presets"><span class="kv">None yet</span></div>
+    </section>
+    <section class="panel">
+      <h2>Activity</h2>
+      <div class="log" id="log"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const el = (tag, props = {}, ...kids) => { const n = Object.assign(document.createElement(tag), props); n.append(...kids); return n; };
+let picked = null;       // {lat, lon, label}
+let status = null;       // last /api/status
+let busy = false;
+let flowHold = false;  // keep an error/help message on screen until the next action
+
+// ---- map ----
+const map = L.map("map").setView([34.0700, -118.4441], 15);  // UCLA
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+const pickMarker = L.marker([0, 0], { draggable: true });
+const activeMarker = L.circleMarker([0, 0], { radius: 9, color: "#2457d6", fillColor: "#5b8cff", fillOpacity: .9 });
+
+function pick(lat, lon, label = "", pan = false) {
+  picked = { lat: +lat, lon: +lon, label };
+  pickMarker.setLatLng([lat, lon]).addTo(map);
+  if (pan) map.setView([lat, lon], Math.max(map.getZoom(), 16));
+  $("picked").textContent = `${(+lat).toFixed(6)}, ${(+lon).toFixed(6)}${label ? " · " + label : ""}`;
+  $("set").disabled = busy; $("save-preset").disabled = false;
+}
+map.on("click", (e) => pick(e.latlng.lat, e.latlng.lng));
+pickMarker.on("dragend", () => { const p = pickMarker.getLatLng(); pick(p.lat, p.lng); });
+
+// ---- api ----
+async function api(path, opts = {}) {
+  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined });
+  let data = null; try { data = await r.json(); } catch {}
+  if (!r.ok) throw Object.assign(new Error(data?.error || data?.detail || r.statusText), { fix: data?.fix || "" });
+  return data;
+}
+function setBusy(b) {
+  busy = b;
+  for (const id of ["set", "reapply", "restore"]) $(id).disabled = b || (id === "set" && !picked);
+}
+async function act(fn) {
+  setBusy(true); flowHold = false;
+  try { await fn(); } catch (e) { flowHold = true; showFlow("warn", `❌ ${e.message}${e.fix ? "\n→ " + e.fix : ""}`); }
+  finally { setBusy(false); refresh(); loadLog(); }
+}
+
+// ---- device panel ----
+function renderDevice(d) {
+  const box = $("device"); box.replaceChildren();
+  if (d.device_name) box.append(el("div", {}, el("b", { textContent: d.device_name }), ` · ${d.model} · iOS ${d.ios_version}`));
+  box.append(el("div", { className: "kv", textContent: `Driver: ${d.driver}${d.persists_after_unplug ? " (survives unplug)" : " (tethered only: keep plugged in)"}` }));
+  for (const c of d.checks) {
+    const row = el("div", { className: "check" },
+      el("span", { className: c.ok ? "dot-ok" : "dot-bad", textContent: c.ok ? "✓" : "✗" }),
+      el("span", {}, el("b", { textContent: c.name + ": " }), c.detail));
+    if (!c.ok && c.fix) row.append(el("div", { className: "fix", textContent: "→ " + c.fix }));
+    box.append(row);
+  }
+  box.append(el("div", { style: "margin-top:6px", className: d.ready ? "dot-ok" : "dot-bad",
+    textContent: d.ready ? "Ready" : "Not ready: follow the fix above" }));
+}
+
+function renderCurrent(s, d) {
+  const box = $("current"); box.replaceChildren();
+  if (s.active && s.lat !== undefined) {
+    box.append(el("div", {}, el("b", { textContent: s.label || "Custom pin" }), ` ${(+s.lat).toFixed(5)}, ${(+s.lon).toFixed(5)}`));
+    box.append(el("div", { className: "kv", textContent: `Last applied ${new Date(s.applied_at).toLocaleString()} via ${s.driver}` }));
+    activeMarker.setLatLng([s.lat, s.lon]).addTo(map);
+  } else {
+    box.append(el("div", { className: "kv", textContent: s.cleared_at ? `Real location (cleared ${new Date(s.cleared_at).toLocaleString()})` : "Real location (nothing simulated)" }));
+    activeMarker.remove();
+  }
+  $("reapply").textContent = s.lat !== undefined ? `Re-apply ${s.label || "last location"}` : "Re-apply last location";
+  if (s.active && !flowHold) renderFlow(s, d);
+}
+
+// ---- set-and-go flow ----
+function showFlow(kind, text, ...buttons) {
+  const box = $("flow"); box.replaceChildren();
+  const f = el("div", { className: `flow ${kind}`, style: "white-space:pre-wrap" }, text);
+  if (buttons.length) f.append(el("div", { className: "row" }, ...buttons));
+  box.append(f);
+}
+function renderFlow(s, d) {
+  if (!s.verified_in_maps) {
+    showFlow("warn",
+      `Check it: open Apple Maps on the iPhone and tap the location arrow.\nIs the blue dot at ${s.label || "the pin"}?`,
+      el("button", { className: "primary", textContent: "Yes, it's there", onclick: () => act(() => api("/api/confirm", { method: "POST" })) }),
+      el("button", { textContent: "No", onclick: () => { flowHold = true; showFlow("warn",
+        "Wait 10 seconds, re-center Maps, and check again. Still wrong? Click Re-apply. If that fails, unplug, replug, unlock the phone, Refresh, and Re-apply."); } }));
+  } else if (d.persists_after_unplug) {
+    showFlow("ok", "✅ Verified. Safe to unplug.\nAfter plugging back in (or any phone restart), click Re-apply and check Maps again.");
+  } else {
+    showFlow("warn", "✅ Verified, but this driver is tethered only. Do NOT unplug or quit Homebound, or the phone goes back to its real location.");
+  }
+}
+
+$("set").onclick = () => act(async () => {
+  const label = picked.label || $("preset-name").value.trim();
+  const r = await api("/api/set", { method: "POST", body: { ...picked, label } });
+  showFlow("ok", "✓ " + r.message);
+});
+$("reapply").onclick = () => act(() => api("/api/reapply", { method: "POST" }));
+$("restore").onclick = () => act(async () => {
+  const r = await api("/api/clear", { method: "POST" });
+  showFlow("ok", `✓ ${r.message}\nConfirm in Apple Maps that the dot is at your real location.\nIf it isn't: restart the iPhone. That always clears simulation.`);
+});
+
+// ---- search ----
+$("search-form").onsubmit = async (e) => {
+  e.preventDefault();
+  const q = $("search").value.trim(); if (!q) return;
+  const box = $("results"); box.replaceChildren(el("div", { className: "kv", textContent: "Searching…" }));
+  try {
+    const res = await api("/api/search?q=" + encodeURIComponent(q));
+    box.replaceChildren(...(res.length ? res.map((r) => el("div", { textContent: r.name,
+      onclick: () => { pick(r.lat, r.lon, r.name.split(",")[0], true); box.replaceChildren(); } }))
+      : [el("div", { className: "kv", textContent: "No results. Try fewer words, the full name (\"Powell Library, Los Angeles\"), or a street address." })]));
+    if (res.length === 1) { pick(res[0].lat, res[0].lon, res[0].name.split(",")[0], true); box.replaceChildren(); }
+  } catch (err) { box.replaceChildren(el("div", { className: "dot-bad", textContent: err.message })); }
+};
+
+// ---- presets ----
+async function loadPresets(list) {
+  list = list || await api("/api/presets");
+  const box = $("presets");
+  box.replaceChildren(...(list.length ? list.map((p) => el("div", { className: "preset", onclick: () => pick(p.lat, p.lon, p.name, true) },
+    el("span", {}, el("b", { textContent: p.name }), el("span", { className: "kv", textContent: ` ${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}` })),
+    el("button", { textContent: "✕", title: "Delete", onclick: async (e) => { e.stopPropagation();
+      if (confirm(`Delete preset "${p.name}"?`)) loadPresets(await api("/api/presets/" + encodeURIComponent(p.name), { method: "DELETE" })); } })))
+    : [el("span", { className: "kv", textContent: "None yet" })]));
+}
+$("save-preset").onclick = async () => {
+  const name = $("preset-name").value.trim();
+  if (!name || !picked) return alert("Drop a pin and type a name first.");
+  loadPresets(await api("/api/presets", { method: "POST", body: { name, lat: picked.lat, lon: picked.lon } }));
+  picked.label = name; pick(picked.lat, picked.lon, name); loadLog();
+};
+
+// ---- log ----
+async function loadLog() {
+  const entries = await api("/api/log");
+  $("log").replaceChildren(...entries.slice().reverse().map((e) => {
+    const d = el("div", { className: e.level }, `${e.time.slice(5).replace("T", " ")}  ${e.message}`);
+    if (e.fix) d.append(el("span", { className: "fix", textContent: "→ " + e.fix }));
+    return d;
+  }));
+}
+
+// ---- status polling ----
+async function refresh() {
+  try {
+    status = await api("/api/status");
+    renderDevice(status.device);
+    renderCurrent(status.state, status.device);
+    const sel = $("driver");
+    if (!sel.options.length) for (const d of status.drivers) sel.append(el("option", { value: d, textContent: d }));
+    sel.value = status.state.driver || status.device.driver;
+  } catch (e) { $("device").textContent = "Can't reach Homebound backend: is it still running?"; }
+}
+$("driver").onchange = async (e) => { await api("/api/driver", { method: "POST", body: { driver: e.target.value } }); refresh(); loadLog(); };
+$("refresh").onclick = () => { refresh(); loadLog(); };
+
+refresh(); loadPresets(); loadLog();
+setInterval(() => { if (!busy) refresh(); }, 5000);
+</script>
+</body>
+</html>

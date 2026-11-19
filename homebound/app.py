@@ -19,6 +19,19 @@ from .state import Store
 STATIC = Path(__file__).parent / "static"
 
 app = FastAPI(title="Homebound")
+ALLOWED_HOSTS = {"127.0.0.1:8765", "localhost:8765"}
+
+
+@app.middleware("http")
+async def local_only(request, call_next):
+    """Block other websites from driving this API (CSRF) and DNS-rebinding tricks."""
+    host = request.headers.get("host", "")
+    origin = request.headers.get("origin")
+    if host not in ALLOWED_HOSTS and host != "testserver":
+        return JSONResponse({"error": "Forbidden host"}, status_code=403)
+    if request.method != "GET" and origin and origin.split("://", 1)[-1] not in ALLOWED_HOSTS:
+        return JSONResponse({"error": "Forbidden origin"}, status_code=403)
+    return await call_next(request)
 store = Store()
 geocoder = Geocoder()
 _drivers: dict[str, LocationDriver] = {}
