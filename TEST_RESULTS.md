@@ -1,0 +1,32 @@
+# Homebound: Persistence Test Results
+
+## Environment (2026-11-19)
+- Mac: macOS 27.0.1 (arm64), Xcode 27.2, devicectl 651.32
+- Python 3.13.15, pymobiledevice3 11.60.0 (project venv)
+- iPhone 16 (iPhone17,3), iOS 26.6.1, UDID 00000000-0000000000000000
+- Developer Mode: on. Personalized DDI: mounted (version 651.32)
+
+## Test coordinate
+Powell Library, UCLA: 34.07161, -118.44219 (on campus, not far away)
+
+## Driver 1: devicectl
+| Check | Time | Result |
+|---|---|---|
+| Set, blue dot moved in Maps | | |
+| Unplugged +1 min | | |
+| Unplugged +5 min | | |
+| Unplugged +30 min | | |
+| Friend confirms in Find My | | |
+| Clear restores real location | | |
+
+## Driver 2: pymobiledevice3
+| Check | Time | Result |
+|---|---|---|
+| Set, blue dot moved in Maps | | |
+| Ctrl+C (session ended), still plugged in | | |
+| Unplugged +1 min | | |
+| Unplugged +5 min | | |
+| Unplugged +30 min | | |
+| Clear restores real location | | |
+
+## Notes
