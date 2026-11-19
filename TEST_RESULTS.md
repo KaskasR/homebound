@@ -39,3 +39,15 @@
 - **devicectl**: location persists after the command exits AND after unplugging (verified to +5 min), and it shows in Find My (iCloud). Set-and-unplug mode is viable.
 - **pymobiledevice3**: tethered only. Needs sudo tunneld plus a live session; reverts when the session ends.
 - **Still to verify before the trip**: a multi-hour unplugged hold, a friend's Find My check from a separate account, and that a phone restart clears simulation.
+
+## App test: Homebound UI with devicectl (2026-11-19, from data/activity.log)
+| Check | Time | Result |
+|---|---|---|
+| Save "Dorm" preset | 04:27:50 | ✅ |
+| Set Dorm, confirmed in Apple Maps | 04:27:55 → 04:28:09 | ✅ |
+| Restore real location | 04:28:40 | ✅ |
+| Set second point (Bay Area), confirmed in Maps | 04:29:11 → 04:29:28 | ✅ |
+| Restore real location | 04:29:30 | ✅ |
+| Long hold (hours, unplugged) | | ⏳ Not yet run |
+| Friend checks Find My | | ⏳ Not yet run |
+| Phone restart clears simulation | | ⏳ Not yet run |
